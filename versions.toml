@@ -1,0 +1,15 @@
+[versions]
+spring-boot="3.5.6"
+springdoc="2.8.13"
+resilience4j="2.3.0"
+testcontainers="1.21.3"
+
+[libraries]
+spring-boot-starter-web = { module="org.springframework.boot:spring-boot-starter-web", version.ref="spring-boot" }
+spring-boot-starter-actuator = { module="org.springframework.boot:spring-boot-starter-actuator", version.ref="spring-boot" }
+spring-boot-starter-validation = { module="org.springframework.boot:spring-boot-starter-validation", version.ref="spring-boot" }
+springdoc-ui = { module="org.springdoc:springdoc-openapi-starter-webmvc-ui", version.ref="springdoc" }
+resilience4j-spring-boot3 = { module="io.github.resilience4j:resilience4j-spring-boot3", version.ref="resilience4j" }
+postgresql = "org.postgresql:postgresql:42.7.4"
+testcontainers-junit = { module="org.testcontainers:junit-jupiter", version.ref="testcontainers" }
+testcontainers-postgres = { module="org.testcontainers:postgresql", version.ref="testcontainers" }

@@ -1,0 +1,133 @@
+# ============================================================
+# 🌱  JAVA / GRADLE BUILD
+# ============================================================
+.gradle/
+build/
+.gradle-cache/
+out/
+bin/
+classes/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/**/build.gradle.kts
+!**/src/**/settings.gradle.kts
+
+# ============================================================
+# 🧠  IDE / EDITORS
+# ============================================================
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+*.classpath
+*.project
+
+# ============================================================
+# 🧾  LOGS & REPORTS
+# ============================================================
+*.log
+*.tmp
+*.bak
+hs_err_pid*
+replay_pid*
+reports/
+test-results/
+surefire-reports/
+*.html
+*.sarif
+*.xml
+*.csv
+
+# ============================================================
+# 💾  OS JUNK
+# ============================================================
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+__MACOSX/
+
+# ============================================================
+# 🐳  DOCKER / BUILD OUTPUTS
+# ============================================================
+*.tar
+*.gz
+*.zip
+*.jar
+*.war
+*.ear
+*.class
+!**/src/**/*.java
+!**/src/**/*.kt
+!**/src/**/*.groovy
+
+# ============================================================
+# ⚙️  LOCAL ENVIRONMENT
+# ============================================================
+.env
+.env.*
+local.properties
+*.local.yaml
+*.local.yml
+
+# ============================================================
+# ☸️  KUBERNETES / DEPLOYMENT
+# ============================================================
+*.kubeconfig
+*.crt
+*.pem
+*.key
+secrets.yaml
+ops/k8s/overlays/**/images.json
+ops/k8s/overlays/**/.kustomizeconfig
+platform-cd/local/.tmp/
+
+# ============================================================
+# 🧩  TEST / SBOM / SECURITY
+# ============================================================
+sbom-*.json
+trivy.sarif
+*.sarif
+*.junit.xml
+*.htmlextra.html
+newman/
+node_modules/
+npm-debug.log*
+package-lock.json
+
+# ============================================================
+# 🪄  GITHUB ACTIONS / ACT LOCAL
+# ============================================================
+.act/
+__act_tmp_*/
+artifacts/
+coverage/
+.tmp/
+
+# ============================================================
+# 🧰  DEVBOX (Jetpack)
+# ============================================================
+# Devbox stores local state & cache in .devbox/
+.devbox/
+# Automatically created environment lock/state
+devbox.lock
+# Local nix/flake cache
+.nix-profile/
+# Nix store link used by Devbox shell
+.nix-defexpr/
+# Devbox shell history
+.devbox-history/
+# VSCode/Devbox integration metadata
+.devbox-vscode/
+# Temporary build outputs or binaries
+.devbox-out/
+# If you use Devbox-managed .env auto files
+.devbox.env
+.devbox.envrc
+
+# ============================================================
+# 🧹  MISC
+# ============================================================
+tmp/
+.cache/

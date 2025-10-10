@@ -1,0 +1,17 @@
+name: sbom-and-scan
+inputs: { image_ref: { required: true } }
+runs:
+  using: composite
+  steps:
+    - uses: anchore/sbom-action@v0
+      with:
+        image:  ${{ inputs.image_ref }}
+        format: spdx-json
+        artifact-name: sbom-${{ inputs.image_ref##*/ }}.json
+    - uses: aquasecurity/trivy-action@0.24.0
+      with:
+        image-ref: ${{ inputs.image_ref }}
+        format: sarif
+        output: trivy.sarif
+    - uses: github/codeql-action/upload-sarif@v3
+      with: { sarif_file: trivy.sarif }

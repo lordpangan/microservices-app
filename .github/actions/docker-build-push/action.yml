@@ -1,0 +1,18 @@
+name: docker-build-push
+description: Buildx build & push
+inputs:
+  context:   { required: true }
+  dockerfile:{ required: true }
+  image:     { required: true }
+  tags:      { required: true }
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        docker buildx build \
+          --file "${{ inputs.dockerfile }}" \
+          $(for t in $(echo "${{ inputs.tags }}" | tr ',' ' '); do echo -n "--tag ${{
+            inputs.image }}:$t "; done) \
+          --push \
+          "${{ inputs.context }}"

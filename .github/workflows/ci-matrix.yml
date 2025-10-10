@@ -1,0 +1,112 @@
+name: ci-matrix
+
+on:
+  pull_request:
+    paths:
+      - 'services/**'
+      - '.github/**'
+      - 'gradle/**'
+      - 'versions.toml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'services/**'
+      - '.github/**'
+      - 'gradle/**'
+      - 'versions.toml'
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  REGISTRY: ${{ vars.REGISTRY || 'ghcr.io/<me>' }}
+  JAVA_VERSION: '21'
+
+jobs:
+  detect:
+    runs-on: ubuntu-22.04
+    outputs:
+      matrix: ${{ steps.set.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - id: set
+        run: |
+          base="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD~1' }}"
+          changed=$(git diff --name-only "$base"...HEAD | grep '^services/' || true)
+          svcs=""
+          for s in orders-service inventory-service payment-service; do
+            if echo "$changed" | grep -q "^services/$s/"; then
+              svcs="$svcs\"$s\","
+            fi
+          done
+          if [ -z "$svcs" ] && [ "${{ github.event_name }}" = "pull_request" ]; then
+            svcs="\"orders-service\",\"inventory-service\",\"payment-service\","
+          fi
+          echo "matrix={\"service\":[${svcs%?}]}" >> "$GITHUB_OUTPUT"
+
+  build_test_scan_push:
+    needs: detect
+    if: ${{ fromJson(needs.detect.outputs.matrix).service[0] != null }}
+    runs-on: ubuntu-22.04
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.detect.outputs.matrix) }}
+
+    permissions:
+      contents: read
+      packages: write
+      security-events: write
+      id-token: write
+      pull-requests: write
+      deployments: write
+      checks: write
+
+    env:
+      SVC: ${{ matrix.service }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+          cache: gradle
+
+      - name: Build & unit tests
+        working-directory: services/${{ env.SVC }}
+        run: |
+          ../../gradlew -p ../../ :services:${{ env.SVC }}:clean :services:${{ env.SVC }}:build -x test
+          ../../gradlew -p ../../ :services:${{ env.SVC }}:test
+
+      - name: Component tests (placeholder)
+        working-directory: services/${{ env.SVC }}
+        run: echo "Add Testcontainers/WireMock ITs here" && true
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: bp
+        uses: ./.github/actions/docker-build-push
+        with:
+          context: .
+          dockerfile: services/${{ env.SVC }}/Dockerfile
+          image: ${{ env.REGISTRY }}/${{ env.SVC }}
+          tags: sha-${{ github.sha || github.run_id }},latest
+
+      - uses: ./.github/actions/sbom-and-scan
+        with:
+          image_ref: ${{ env.REGISTRY }}/${{ env.SVC }}:sha-${{ github.sha }}
+
+      - name: Summary
+        run: echo "### ${SVC} built → $REGISTRY/${SVC}:sha-${GITHUB_SHA::8}" >> $GITHUB_STEP_SUMMARY

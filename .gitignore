@@ -141,3 +141,4 @@ tmp/
 !gradle/
 !gradle/wrapper/
 !gradle/wrapper/gradle-wrapper.jar
+!config/checkstyle/checkstyle.xml

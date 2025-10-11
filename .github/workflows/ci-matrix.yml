@@ -26,7 +26,8 @@ env:
 
 jobs:
   detect:
-    runs-on: ubuntu-22.04
+    # Detect which microservices have changed since last commit or PR base
+    runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set.outputs.matrix }}
     steps:
@@ -36,23 +37,57 @@ jobs:
 
       - id: set
         run: |
-          base="${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || 'HEAD~1' }}"
-          changed=$(git diff --name-only "$base"...HEAD | grep '^services/' || true)
+          set -euo pipefail
+
+          EVENT_NAME="${{ github.event_name }}"
+          DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
+          BEFORE_SHA="${{ github.event.before }}"
+          BASE_REF="${{ github.base_ref }}"  # non-empty on PRs
+          BASE_SHA=""
+
+          # check if even is PR or push to base branch
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            # Base commit of the PR’s target branch at PR time
+            BASE_SHA="${{ github.event.pull_request.base.sha }}"
+            # Make sure we have that commit locally
+            git fetch --no-tags --prune origin "$BASE_REF":refs/remotes/origin/"$BASE_REF" || true
+          else
+            # Check if its the first push on a new branch
+            if [[ "$BEFORE_SHA" != "0000000000000000000000000000000000000000" && -n "$BEFORE_SHA" ]]; then
+              BASE_SHA="$BEFORE_SHA"
+              git fetch --no-tags --prune origin "$BASE_SHA" || true
+            else
+              # First push on a new branch or workflow_dispatch: compare to merge-base with default branch
+              git fetch --no-tags --prune origin "$DEFAULT_BRANCH"
+              BASE_SHA="$(git merge-base HEAD origin/$DEFAULT_BRANCH || true)"
+              # Fallback to the very first commit if merge-base fails
+              if [[ -z "$BASE_SHA" ]]; then
+                BASE_SHA="$(git rev-list --max-parents=0 HEAD)"
+              fi
+            fi
+          fi
+
+          # Do the diff (triple-dot = since common ancestor)
+          changed="$(git diff --name-only "$BASE_SHA"...HEAD | grep '^services/' || true)"
+
           svcs=""
           for s in orders-service inventory-service payment-service; do
             if echo "$changed" | grep -q "^services/$s/"; then
               svcs="$svcs\"$s\","
             fi
           done
-          if [ -z "$svcs" ] && [ "${{ github.event_name }}" = "pull_request" ]; then
+
+          if [[ -z "$svcs" ]]; then
             svcs="\"orders-service\",\"inventory-service\",\"payment-service\","
           fi
+
           echo "matrix={\"service\":[${svcs%?}]}" >> "$GITHUB_OUTPUT"
 
   build_test_scan_push:
+    # Build, test, scan, and push the changed microservices
     needs: detect
     if: ${{ fromJson(needs.detect.outputs.matrix).service[0] != null }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix: ${{ fromJson(needs.detect.outputs.matrix) }}

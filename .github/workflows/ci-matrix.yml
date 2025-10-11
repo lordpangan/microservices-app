@@ -83,6 +83,9 @@ jobs:
 
           echo "matrix={\"service\":[${svcs%?}]}" >> "$GITHUB_OUTPUT"
 
+      - name: Debug outputs
+        run: echo "Matrix = ${{ steps.set.outputs.matrix }}"
+
   build_test_scan_push:
     # Build, test, scan, and push the changed microservices
     needs: detect

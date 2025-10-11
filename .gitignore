@@ -131,3 +131,13 @@ devbox.lock
 # ============================================================
 tmp/
 .cache/
+
+# ============================================================
+# 🧹  GRADLE
+# ============================================================
+
+# Ignore Gradle’s local cache, but not the wrapper
+.gradle/
+!gradle/
+!gradle/wrapper/
+!gradle/wrapper/gradle-wrapper.jar

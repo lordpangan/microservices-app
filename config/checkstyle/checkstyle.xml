@@ -17,8 +17,8 @@
     <module name="AvoidStarImport"/>
     <module name="UnusedImports"/>
     <module name="NeedBraces"/>
-    <module name="WhitespaceAfter"/>
-    <module name="WhitespaceAround"/>
+    <!-- <module name="WhitespaceAfter"/> -->
+    <!-- <module name="WhitespaceAround"/> -->
     <module name="Indentation">
       <property name="basicOffset" value="2"/>
       <property name="braceAdjustment" value="0"/>

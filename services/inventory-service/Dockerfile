@@ -9,4 +9,5 @@ FROM gcr.io/distroless/java21-debian12
 WORKDIR /srv
 COPY --from=build /app/services/inventory-service/build/libs/*.jar app.jar
 USER nonroot:nonroot
+EXPOSE 8080
 ENTRYPOINT ["java","-jar","/srv/app.jar"]

@@ -1,10 +1,10 @@
 name: docker-build-push
 description: Buildx build & push
 inputs:
-  context:   { required: true }
-  dockerfile:{ required: true }
-  image:     { required: true }
-  tags:      { required: true }
+  context:    { required: true }
+  dockerfile: { required: true }
+  image:      { required: true }
+  tags:       { required: true }
 runs:
   using: composite
   steps:

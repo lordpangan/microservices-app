@@ -1,17 +1,45 @@
 name: sbom-and-scan
-inputs: { image_ref: { required: true } }
+description: "Generate SBOM and scan an image with Trivy, then upload SARIF"
+inputs:
+  image_ref:
+    description: "Full image ref, e.g. ghcr.io/owner/svc:tag"
+    required: true
+    type: string
+
 runs:
   using: composite
   steps:
+    - id: parse
+      shell: bash
+      env:
+        IMAGE_REF: ${{ inputs.image_ref }}
+      run: |
+        set -euo pipefail
+        base="${IMAGE_REF##*/}"           # e.g. svc:tag
+        if [[ "$base" == *:* ]]; then
+          name="${base%%:*}"              # svc
+          tag="${base#*:}"                # tag
+        else
+          name="$base"
+          tag="latest"
+        fi
+        echo "image_name=$name" >> "$GITHUB_OUTPUT"
+        echo "image_tag=$tag"   >> "$GITHUB_OUTPUT"
+
     - uses: anchore/sbom-action@v0
       with:
-        image:  ${{ inputs.image_ref }}
+        image: ${{ inputs.image_ref }}
         format: spdx-json
-        artifact-name: sbom-${{ inputs.image_ref##*/ }}.json
+        # If you want the SBOM uploaded as an artifact by the action:
+        # upload-artifact: true
+        artifact-name: sbom-${{ steps.parse.outputs.image_name }}.json
+
     - uses: aquasecurity/trivy-action@0.24.0
       with:
         image-ref: ${{ inputs.image_ref }}
         format: sarif
         output: trivy.sarif
+
     - uses: github/codeql-action/upload-sarif@v3
-      with: { sarif_file: trivy.sarif }
+      with:
+        sarif_file: trivy.sarif

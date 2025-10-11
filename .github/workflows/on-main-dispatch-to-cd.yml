@@ -1,11 +1,11 @@
 name: dispatch-platform-cd
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'services/**'
+  workflow_dispatch:
+    inputs:
+      env:
+        description: 'Environment'
+        default: 'prd'
 
 jobs:
   detect-and-dispatch:

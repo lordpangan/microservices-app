@@ -4,7 +4,7 @@ Spring Boot 3.3+ service that manages orders, coordinates with inventory and pay
 ## Endpoints
 - `POST /api/orders` – place an order (validates inventory + payment)
 - `GET /api/orders/{id}` – fetch order status
-- `GET /actuator/health/readiness` – readiness probe
+- `GET /actuator/health` – readiness probe
 - Swagger UI: `/swagger`
 
 ## Dependencies

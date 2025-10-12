@@ -3,7 +3,7 @@ Spring Boot 3.3+ service that simulates payment authorization and capture.
 
 ## Endpoints
 - `POST /api/payment/charge` – processes a mock payment request
-- `GET /actuator/health/readiness` – readiness probe
+- `GET /actuator/health` – readiness probe
 - Swagger UI: `/swagger`
 
 ## Environment Variables

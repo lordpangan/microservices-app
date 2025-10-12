@@ -4,7 +4,10 @@
     "gradle_9@9.1.0",
     "temurin-bin-21@latest",
     "docker@28.3.3",
-    "gh@2.79.0"
+    "gh@2.79.0",
+    "kubectl@1.33.4",
+    "kind@0.30.0",
+    "skaffold@2.16.1"
   ],
   "shell": {
     "init_hook": [

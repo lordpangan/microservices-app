@@ -4,7 +4,7 @@ Spring Boot 3.3+ service that manages product stock levels and reservations for 
 ## Endpoints
 - `POST /api/inventory/reserve` – reserves items for an order (decrements stock)
 - `GET /api/inventory/stock/{sku}` – returns available stock quantity
-- `GET /actuator/health/readiness` – readiness probe
+- `GET /actuator/health` – readiness probe
 - Swagger UI: `/swagger`
 
 ## Dependencies

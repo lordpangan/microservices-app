@@ -1,0 +1,84 @@
+apiVersion: skaffold/v4beta11
+kind: Config
+metadata:
+  name: local-dev
+build:
+  local:
+    push: false  # Skaffold will auto-load images into kind when push=false
+  artifacts:
+    - image: microservices-app/orders-service
+      context: services/orders-service
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.java"
+            dest: "/app/src"
+          - src: "build.gradle.kts"
+            dest: "/app/build.gradle.kts"
+    - image: microservices-app/inventory-service
+      context: services/inventory-service
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.java"
+            dest: "/app/src"
+          - src: "build.gradle.kts"
+            dest: "/app/build.gradle.kts"
+    - image: microservices-app/payment-service
+      context: services/payment-service
+      docker:
+        dockerfile: Dockerfile
+      sync:
+        manual:
+          - src: "src/**/*.java"
+            dest: "/app/src"
+          - src: "build.gradle.kts"
+            dest: "/app/build.gradle.kts"
+manifests:
+  rawYaml:
+    - deploy/local/00-namespace.yaml
+    - deploy/local/01-config.yaml
+    - deploy/local/orders.yaml
+    - deploy/local/inventory.yaml
+    - deploy/local/payment.yaml
+deploy:
+  kubectl:
+    flags:
+      apply: ["--server-side", "--force-conflicts"]
+portForward:
+  - resourceType: service
+    resourceName: orders-service
+    namespace: microservices-app
+    port: 8080
+    localPort: 8081
+  - resourceType: service
+    resourceName: inventory-service
+    namespace: microservices-app
+    port: 8080
+    localPort: 8082
+  - resourceType: service
+    resourceName: payment-service
+    namespace: microservices-app
+    port: 8080
+    localPort: 8083
+
+profiles:
+  - name: debug
+    build:
+      artifacts:
+        - image: microservices-app/orders-service
+          context: services/orders-service
+          docker:
+            dockerfile: Dockerfile
+        - image: microservices-app/inventory-service
+          context: services/inventory-service
+          docker:
+            dockerfile: Dockerfile
+        - image: microservices-app/payment-service
+          context: services/payment-service
+          docker:
+            dockerfile: Dockerfile
+    deploy:
+      kubectl: {}

@@ -66,16 +66,16 @@ microservices-app/
 └── README.md
 ```
 ## Setting Up Development Environment
+Requirement you need to have a docker daemon on your machine.
+
 ```
-# this will install all tools needed for development
+# install all tools needed for development
 devbox shell
 
-# configure JAVA_HOME
-sed -i '' '/^org.gradle.java.home=/d' ~/.gradle/gradle.properties 2>/dev/null || true
-sed -i '' '/^org.gradle.java.home=/d' ./gradle.properties 2>/dev/null || true
-export JAVA_HOME="$PWD/.devbox/nix/profile/default"
-echo $JAVA_HOME
-"$JAVA_HOME/bin/java" -version
+# bring up local-k8s
+make kind-up
 
-gradle -Dorg.gradle.java.home="$JAVA_HOME" wrapper --gradle-version 9.1
+# deploy apps on local
+make dev
+
 ```

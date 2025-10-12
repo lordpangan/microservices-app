@@ -4,38 +4,24 @@ metadata:
   name: local-dev
 build:
   local:
-    push: false  # Skaffold will auto-load images into kind when push=false
+    push: false                # load images straight into kind
+    tryImportMissing: true     # speed up by reusing local images
+    concurrency: 3
+  tagPolicy:
+    gitCommit: {}
   artifacts:
     - image: microservices-app/orders-service
-      context: services/orders-service
+      context: .                               # <— repo root!
       docker:
-        dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: "src/**/*.java"
-            dest: "/app/src"
-          - src: "build.gradle.kts"
-            dest: "/app/build.gradle.kts"
+        dockerfile: services/orders-service/Dockerfile
     - image: microservices-app/inventory-service
-      context: services/inventory-service
+      context: .
       docker:
-        dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: "src/**/*.java"
-            dest: "/app/src"
-          - src: "build.gradle.kts"
-            dest: "/app/build.gradle.kts"
+        dockerfile: services/inventory-service/Dockerfile
     - image: microservices-app/payment-service
-      context: services/payment-service
+      context: .
       docker:
-        dockerfile: Dockerfile
-      sync:
-        manual:
-          - src: "src/**/*.java"
-            dest: "/app/src"
-          - src: "build.gradle.kts"
-            dest: "/app/build.gradle.kts"
+        dockerfile: services/payment-service/Dockerfile
 manifests:
   rawYaml:
     - deploy/local/00-namespace.yaml
@@ -63,22 +49,3 @@ portForward:
     namespace: microservices-app
     port: 8080
     localPort: 8083
-
-profiles:
-  - name: debug
-    build:
-      artifacts:
-        - image: microservices-app/orders-service
-          context: services/orders-service
-          docker:
-            dockerfile: Dockerfile
-        - image: microservices-app/inventory-service
-          context: services/inventory-service
-          docker:
-            dockerfile: Dockerfile
-        - image: microservices-app/payment-service
-          context: services/payment-service
-          docker:
-            dockerfile: Dockerfile
-    deploy:
-      kubectl: {}

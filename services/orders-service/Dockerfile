@@ -1,3 +1,6 @@
+# enable buildkit
+# syntax=docker/dockerfile:1.4 
+
 # build
 FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /app

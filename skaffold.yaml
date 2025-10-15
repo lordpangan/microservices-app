@@ -7,6 +7,8 @@ build:
     push: false                # load images straight into kind
     tryImportMissing: true     # speed up by reusing local images
     concurrency: 3
+    useBuildkit: true
+    useDockerCLI: true
   tagPolicy:
     gitCommit: {}
   artifacts:
@@ -36,16 +38,16 @@ deploy:
 portForward:
   - resourceType: service
     resourceName: orders-service
-    namespace: microservices-app
+    namespace: local-dev
     port: 8080
     localPort: 8081
   - resourceType: service
     resourceName: inventory-service
-    namespace: microservices-app
+    namespace: local-dev
     port: 8080
     localPort: 8082
   - resourceType: service
     resourceName: payment-service
-    namespace: microservices-app
+    namespace: local-dev
     port: 8080
     localPort: 8083

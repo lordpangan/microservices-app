@@ -24,6 +24,10 @@ spec:
                 configMapKeyRef:
                   name: app-config
                   key: SPRING_PROFILES_ACTIVE
+            - name: INVENTORY_BASE_URL
+              value: "http://inventory-service:8080"
+            - name: PAYMENT_BASE_URL
+              value: "http://payment-service:8080"
           readinessProbe:
             httpGet:
               path: /actuator/health

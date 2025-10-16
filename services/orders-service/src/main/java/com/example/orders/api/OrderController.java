@@ -22,10 +22,10 @@ public class OrderController {
   private final Map<String, Order> store = new HashMap<>();
   private final RestTemplate rest = new RestTemplate();
 
-  @Value("${inventory.url}")
+  @Value("${INVENTORY_BASE_URL:http://inventory-service:8080}")
   private String inventoryUrl;
 
-  @Value("${payment.url}")
+  @Value("${PAYMENT_BASE_URL:http://payment-service:8080}")
   private String paymentUrl;
 
   @PostMapping

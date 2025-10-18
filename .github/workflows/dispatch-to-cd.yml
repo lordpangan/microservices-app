@@ -1,0 +1,104 @@
+name: dispatch-platform-cd
+
+on:
+  workflow_run:
+    workflows: ["ci-matrix"]   # must match your CI workflow's name:
+    types: [completed]
+
+concurrency:
+  group: dispatch-platform-cd-${{ github.event.workflow_run.head_branch }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Detect changed services
+        id: detect
+        env:
+          EVENT_PATH: ${{ github.event_path }}   # JSON of the workflow_run event
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          HEAD_SHA='${{ github.event.workflow_run.head_sha }}'
+          BRANCH='${{ github.event.workflow_run.head_branch }}'
+
+          # Prefer PR base SHA if this CI was for a PR; else use first parent of HEAD
+          PR_BASE_SHA="$(jq -r '.workflow_run.pull_requests[0].base.sha // empty' "$EVENT_PATH")"
+          if [[ -n "$PR_BASE_SHA" ]]; then
+            BASE_SHA="$PR_BASE_SHA"
+            echo "Using PR base SHA: $BASE_SHA"
+          else
+            BASE_SHA="$(git rev-parse "${HEAD_SHA}^")"
+            echo "Using first parent of HEAD: $BASE_SHA"
+          fi
+
+          # Compute changed files between base and CI head
+          CHANGED_FILES="$(git diff --name-only "$BASE_SHA" "$HEAD_SHA" || true)"
+          echo "Changed files between $BASE_SHA..$HEAD_SHA:"
+          printf '%s\n' "$CHANGED_FILES"
+
+          # Filter to services/*
+          CHANGED_UNDER_SERVICES="$(printf '%s\n' "$CHANGED_FILES" | grep '^services/' || true)"
+          echo "Changed under services/:"
+          printf '%s\n' "$CHANGED_UNDER_SERVICES"
+
+          # Init outputs (underscored keys to avoid bracket syntax)
+          echo "changed_orders_service=false"    >> "$GITHUB_OUTPUT"
+          echo "changed_inventory_service=false" >> "$GITHUB_OUTPUT"
+          echo "changed_payment_service=false"   >> "$GITHUB_OUTPUT"
+
+          for s in orders-service inventory-service payment-service; do
+            if printf '%s\n' "$CHANGED_UNDER_SERVICES" | grep -q "^services/$s/"; then
+              key="$(echo "changed_${s}" | tr '-' '_')"   # e.g., changed_orders_service
+              echo "${key}=true" >> "$GITHUB_OUTPUT"
+            fi
+          done
+
+      - name: Dispatch changed services to platform-cd
+        if: |
+          steps.detect.outputs.changed_orders_service == 'true' ||
+          steps.detect.outputs.changed_inventory_service == 'true' ||
+          steps.detect.outputs.changed_payment_service == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.CD_REPO_TOKEN }}   # PAT w/ access to platform-cd (Actions RW + Contents RW)
+        shell: bash
+        run: |
+          set -euo pipefail
+          SHORT='${{ github.event.workflow_run.head_sha }}'
+          SHORT="${SHORT:0:8}"
+
+          dispatch() {
+            local svc="$1"
+            local short="sha-${SHORT}"
+
+            echo "→ Dispatching ${svc} ${short}"
+
+            jq -n --arg et 'deploy-sit' --arg s "$svc" --arg t "$short" \
+              '{event_type:$et, client_payload:{service:$s, tag:$t}}' \
+            | gh api -X POST repos/lordpangan/platform-cd/dispatches \
+                --input - \
+                --silent
+          }
+
+          [[ '${{ steps.detect.outputs.changed_orders_service }}'    == 'true' ]] && dispatch 'orders-service'
+          [[ '${{ steps.detect.outputs.changed_inventory_service }}' == 'true' ]] && dispatch 'inventory-service'
+          [[ '${{ steps.detect.outputs.changed_payment_service }}'   == 'true' ]] && dispatch 'payment-service'
+
+      - name: Nothing changed (summary)
+        if: |
+          steps.detect.outputs.changed_orders_service != 'true' &&
+          steps.detect.outputs.changed_inventory_service != 'true' &&
+          steps.detect.outputs.changed_payment_service != 'true'
+        run: echo "No services under /services/* changed for ${{
+                 github.event.workflow_run.head_sha }} on branch ${{
+                 github.event.workflow_run.head_branch }}."

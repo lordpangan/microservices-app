@@ -1,5 +1,15 @@
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
+
+# for LKPs dev workflow
+# kubeadmConfigPatches:
+# - |
+#   apiVersion: kubeadm.k8s.io/v1beta3
+#   kind: ClusterConfiguration
+#   apiServer:
+#     certSANs:
+#     - <k8s Machine's IP Address>
+
 nodes:
   - role: control-plane
     extraPortMappings:

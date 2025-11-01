@@ -134,13 +134,19 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Extract short SHA
+        run: echo "SHORT_SHA=${GITHUB_SHA::8}" >> $GITHUB_ENV
+
       - id: bp
-        uses: ./.github/actions/docker-build-push
+        uses: docker/build-push-action@v5
         with:
           context: .
-          dockerfile: services/${{ env.SVC }}/Dockerfile
-          image: ${{ env.REGISTRY }}/${{ env.SVC }}
-          tags: sha-${{ github.sha || github.run_id }},latest
+          file: services/${{ env.SVC }}/Dockerfile
+          push: true
+          tags: |
+            ${{ env.REGISTRY }}/${{ env.SVC }}:sha-${{ github.sha }}
+            ${{ env.REGISTRY }}/${{ env.SVC }}:sha-${{ env.SHORT_SHA }}
+            ${{ env.REGISTRY }}/${{ env.SVC }}:latest
 
       - uses: ./.github/actions/sbom-and-scan
         with:

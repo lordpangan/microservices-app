@@ -86,8 +86,8 @@ jobs:
             jq -n --arg et 'deploy-sit' --arg s "$svc" --arg t "$short" \
               '{event_type:$et, client_payload:{service:$s, tag:$t}}' \
             | gh api -X POST repos/lordpangan/platform-cd/dispatches \
-                --input - \
-                --silent
+              --input - \
+              --silent || true
           }
 
           [[ '${{ steps.detect.outputs.changed_orders_service }}'    == 'true' ]] && dispatch 'orders-service'

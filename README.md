@@ -2,6 +2,9 @@
 
 This repo contains three **Spring Boot 3.3+ microservices** designed to showcase a **CI/CD pipeline** with **GitHub Actions, Kustomize, and GitHub-native notifications**.
 
+### TODO:
+- Add a proper git commit test(e.g SAST, unit test)
+
 ## Services
 - **orders-service** → orchestrates inventory + payment
 - **inventory-service** → stock management (with Postgres in component tests)

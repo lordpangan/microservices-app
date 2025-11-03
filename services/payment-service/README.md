@@ -21,3 +21,4 @@ Spring Boot 3.3+ service that simulates payment authorization and capture.
 ```bash
 ./gradlew :services:payment-service:bootRun
 ```
+
